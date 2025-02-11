@@ -1,2 +1,2 @@
 # CipherHide 
-[link](https://github.com/Rohith2567/CipherHide/releases)
+[Link to CipherHide Release](https://github.com/Rohith2567/CipherHide/releases)
