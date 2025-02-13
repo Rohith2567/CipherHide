@@ -21,7 +21,7 @@ def resource_path(relative_path):
 
 root = Tk()
 root.title("CipherHide - Hide a Secret Text Message in an Image")
-root.geometry("700x500+150+180")
+root.geometry("700x600+150+180")
 # root.eval("tk::PlaceWindow . center")
 root.resizable(False, False)
 # #3d6466
@@ -64,6 +64,7 @@ def messagebox2(typ, title, message):
 def show_image():
     global filename
 
+    code.set("")  # Clear the secret key before asking for it again
     text1.delete(1.0, END)
     filename = filedialog.askopenfilename(initialdir=os.getcwd(),
                                           title='Select Image File',
@@ -88,11 +89,20 @@ def hide():
             messagebox2("Error", "Hide Error", "No Input")
             # messagebox.showerror("Hide Error", "No Input")
         else:
-            secret = lsb.hide(str(filename), message)
+            password = code.get()
+            if password:
+                msg = f'{password}:{message}'  # Embed password within message
+                secret = lsb.hide(str(filename), msg)
+                messagebox.showinfo('Success',
+                                    'Your message has been successfully hidden in the image. Please save your image.')
+                code.set("")
+            else:
+                messagebox.showerror('Error', 'Please enter a Secret Key')
             # messagebox.showinfo("Success", "Valid input!")
 
 
 def save():
+    code.set("")
     if not filename:
         messagebox2("Error", "Image Error", "No Image")
         # messagebox.showerror("Image Error", "No Image")
@@ -110,23 +120,29 @@ def save():
 
 
 def show():
-
+    entered_password = code.get()
     if not filename:
         messagebox2("Error", "Image Error", "No Image")
         # messagebox.showerror("Image Error", "No Image")
     else:
-        try:
-            clear_message = lsb.reveal(filename)
+        if entered_password:
+            try:
+                revealed_msg = lsb.reveal(filename)
 
-            if clear_message:
-                # text1.delete(1.0, END)
-                text1.insert(END, clear_message)
-
-        except IndexError:
-            # messagebox.showwarning("Warning", "No Hidden Data")
-            messagebox2("Warning", "Warning", "No Hidden Data")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occured: {str(e)}")
+                if revealed_msg:
+                    stored_password, message = revealed_msg.split(':', 1)
+                    if entered_password == stored_password:
+                        # text1.delete(1.0, END)
+                        text1.insert(END, message)
+                    else:
+                        messagebox.showerror('Error', 'Incorrect Secret Key!')
+            except IndexError:
+                # messagebox.showwarning("Warning", "No Hidden Data")
+                messagebox2("Warning", "Warning", "No Hidden Data")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occured: {str(e)}")
+        else:
+            messagebox.showerror('Error', 'Secret Key is required!')
 
 
 # frame = tk.Frame(root, width=500, height=600, bg="#3d6466")
@@ -163,9 +179,17 @@ scrollbar1.place(x=320, y=0, height=300)
 scrollbar1.configure(command=text1.yview)
 text1.configure(yscrollcommand=scrollbar1.set)
 
+# Secret key         #fae1c2  #f4a261
+Label(root, text='Enter Secret Key:', font='arial 15 bold', bg='#2f4155', fg='#fae1c2').place(x=150, y=405)
+
+# Entry Widget for secret key
+code = StringVar()
+e = Entry(root, textvariable=code, bg='#f1faee', bd=2, font='impact 10 bold', show='*')
+e.place(x=322, y=410)
+
 # third Frame
 frame3 = Frame(root, bd=3, bg="#2f4155", width=330, height=100, relief=GROOVE)
-frame3.place(x=10, y=370)
+frame3.place(x=10, y=470)  # 370
 
 # style = ttk.Style()
 # style.configure("Rounded.TButton", width=10, height=2, font=("arial", 12, "bold"), background="#2f4155",
@@ -182,7 +206,7 @@ Label(frame3, text="Picture, Image, Photo File", bg="#2f4155", fg="yellow").plac
 
 # third Frame
 frame4 = Frame(root, bd=3, bg="#2f4155", width=330, height=100, relief=GROOVE)
-frame4.place(x=360, y=370)
+frame4.place(x=360, y=470)  # 370
 
 Button(frame4, text="Hide Data", width=10, height=2, font="arial 14 bold", command=hide).place(x=20, y=30)
 Button(frame4, text="Show Data", width=10, height=2, font="arial 14 bold", command=show).place(x=180, y=30)
